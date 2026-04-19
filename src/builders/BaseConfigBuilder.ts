@@ -11,6 +11,7 @@ export abstract class BaseConfigBuilder {
     protected selectedRules: any;
     protected t: Translator;
     protected userAgent?: string;
+    protected fetchUA?: string;
     protected appliedOverrideKeys: Set<string>;
     protected groupByCountry: boolean;
     protected includeAutoSelect: boolean;
@@ -26,7 +27,8 @@ export abstract class BaseConfigBuilder {
         userAgent?: string,
         groupByCountry = false,
         includeAutoSelect = true,
-        rejectQuic = false
+        rejectQuic = false,
+        fetchUA?: string
     ) {
         this.inputString = inputString;
         this.config = deepCopy(baseConfig);
@@ -34,6 +36,7 @@ export abstract class BaseConfigBuilder {
         this.selectedRules = [];
         this.t = createTranslator(lang);
         this.userAgent = userAgent;
+        this.fetchUA = fetchUA;
         this.appliedOverrideKeys = new Set();
         this.groupByCountry = groupByCountry;
         this.includeAutoSelect = includeAutoSelect;
@@ -112,7 +115,7 @@ export abstract class BaseConfigBuilder {
                     const { fetchSubscriptionWithFormat } = await import('../parsers/subscription/httpSubscriptionFetcher.ts');
 
                     try {
-                        const fetchResult = await fetchSubscriptionWithFormat(trimmedUrl, this.userAgent);
+                        const fetchResult = await fetchSubscriptionWithFormat(trimmedUrl, this.fetchUA);
                         if (fetchResult) {
                             const { content, format, url: originalUrl, subscriptionUserinfo } = fetchResult;
 
@@ -144,7 +147,7 @@ export abstract class BaseConfigBuilder {
                                     if (item && typeof item === 'object' && (item as any).tag) {
                                         parsedItems.push(item as ProxyConfig);
                                     } else if (typeof item === 'string') {
-                                        const subResult = await ProxyParser.parse(item, this.userAgent);
+                                        const subResult = await ProxyParser.parse(item, this.fetchUA);
                                         if (subResult) {
                                             if (Array.isArray(subResult)) {
                                                 parsedItems.push(...(subResult as ProxyConfig[]));
@@ -162,7 +165,7 @@ export abstract class BaseConfigBuilder {
                     continue;
                 }
 
-                const result = await ProxyParser.parse(processedUrl, this.userAgent);
+                const result = await ProxyParser.parse(processedUrl, this.fetchUA);
                 if (result && typeof result === 'object' && !Array.isArray(result) && (result as any).type && (result as any).proxies) {
                      const casted = result as any;
                     if (casted.config) {
@@ -182,7 +185,7 @@ export abstract class BaseConfigBuilder {
                         if (item && typeof item === 'object' && (item as any).tag) {
                             parsedItems.push(item as ProxyConfig);
                         } else if (typeof item === 'string') {
-                            const subResult = await ProxyParser.parse(item, this.userAgent);
+                            const subResult = await ProxyParser.parse(item, this.fetchUA);
                             if (subResult) {
                                 if (Array.isArray(subResult)) {
                                     parsedItems.push(...(subResult as ProxyConfig[]));

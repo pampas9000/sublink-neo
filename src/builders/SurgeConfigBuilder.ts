@@ -19,10 +19,11 @@ export class SurgeConfigBuilder extends BaseConfigBuilder {
         userAgent?: string,
         groupByCountry = false,
         includeAutoSelect = true,
-        rejectQuic = false
+        rejectQuic = false,
+        fetchUA?: string
     ) {
         const resolvedBaseConfig = baseConfig ?? SURGE_CONFIG;
-        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic);
+        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic, fetchUA);
         this.selectedRules = selectedRules;
         this.customRules = customRules;
     }

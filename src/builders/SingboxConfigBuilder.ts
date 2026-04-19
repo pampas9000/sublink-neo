@@ -27,10 +27,11 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
         externalUiDownloadUrl?: string,
         singboxVersion = '1.12',
         includeAutoSelect = true,
-        rejectQuic = false
+        rejectQuic = false,
+        fetchUA?: string
     ) {
         const resolvedBaseConfig = baseConfig ?? SING_BOX_CONFIG;
-        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic);
+        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic, fetchUA);
 
         this.selectedRules = selectedRules;
         this.customRules = customRules;

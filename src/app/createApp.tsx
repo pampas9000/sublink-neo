@@ -19,6 +19,7 @@ import { UserConfigService } from '../services/userConfigService.ts';
 import { ServiceError, MissingDependencyError } from '../services/errors.ts';
 import { normalizeRuntime } from '../runtime/runtimeConfig.ts';
 import { PREDEFINED_RULE_SETS, SING_BOX_CONFIG, SING_BOX_CONFIG_V1_11, generateSubconverterConfig } from '../config/index.ts';
+import { DEFAULT_FETCH_USER_AGENT } from '../parsers/subscription/httpSubscriptionFetcher.ts';
 import { HonoRequest } from 'hono';
 import { Logger } from '../runtime/types.ts';
 
@@ -91,6 +92,7 @@ export function createApp(bindings: any = {}) {
             const selectedRules = parseSelectedRules(c.req.query('selectedRules'));
             const customRules = parseJsonArray(c.req.query('customRules'));
             const ua = c.req.query('ua') || getRequestHeader(c.req, 'User-Agent') || DEFAULT_USER_AGENT;
+            const fetchUa = c.req.query('fetch_ua');
             const groupByCountry = parseBooleanFlag(c.req.query('group_by_country'));
             const includeAutoSelect = c.req.query('include_auto_select') !== 'false';
             const enableClashUI = parseBooleanFlag(c.req.query('enable_clash_ui'));
@@ -126,7 +128,8 @@ export function createApp(bindings: any = {}) {
                 externalUiDownloadUrl,
                 singboxConfigVersion as any,
                 includeAutoSelect,
-                rejectQuic
+                rejectQuic,
+                fetchUa as string | undefined
             );
             await builder.build();
             const userinfo = builder.getSubscriptionUserinfo();
@@ -149,6 +152,7 @@ export function createApp(bindings: any = {}) {
             const selectedRules = parseSelectedRules(c.req.query('selectedRules'));
             const customRules = parseJsonArray(c.req.query('customRules'));
             const ua = c.req.query('ua') || getRequestHeader(c.req, 'User-Agent') || DEFAULT_USER_AGENT;
+            const fetchUa = c.req.query('fetch_ua');
             const groupByCountry = parseBooleanFlag(c.req.query('group_by_country'));
             const includeAutoSelect = c.req.query('include_auto_select') !== 'false';
             const enableClashUI = parseBooleanFlag(c.req.query('enable_clash_ui'));
@@ -176,7 +180,8 @@ export function createApp(bindings: any = {}) {
                 externalController,
                 externalUiDownloadUrl,
                 includeAutoSelect,
-                rejectQuic
+                rejectQuic,
+                fetchUa as string | undefined
             );
             await builder.build();
             const userinfo = builder.getSubscriptionUserinfo();
@@ -200,6 +205,7 @@ export function createApp(bindings: any = {}) {
             const selectedRules = parseSelectedRules(c.req.query('selectedRules'));
             const customRules = parseJsonArray(c.req.query('customRules'));
             const ua = c.req.query('ua') || getRequestHeader(c.req, 'User-Agent') || DEFAULT_USER_AGENT;
+            const fetchUa = c.req.query('fetch_ua');
             const groupByCountry = parseBooleanFlag(c.req.query('group_by_country'));
             const includeAutoSelect = c.req.query('include_auto_select') !== 'false';
             const rejectQuic = parseBooleanFlag(c.req.query('reject_quic'));
@@ -221,7 +227,8 @@ export function createApp(bindings: any = {}) {
                 ua,
                 groupByCountry,
                 includeAutoSelect,
-                rejectQuic
+                rejectQuic,
+                fetchUa as string | undefined
             );
             builder.setSubscriptionUrl(c.req.url);
             await builder.build();
@@ -288,7 +295,8 @@ export function createApp(bindings: any = {}) {
         const proxylist = inputString.split('\n');
         const finalProxyList: string[] = [];
         const userAgent = c.req.query('ua') || getRequestHeader(c.req, 'User-Agent') || DEFAULT_USER_AGENT;
-        const headers = { 'User-Agent': userAgent };
+        const fetchUa = c.req.query('fetch_ua') || DEFAULT_FETCH_USER_AGENT;
+        const headers = { 'User-Agent': fetchUa };
 
         for (const proxy of proxylist) {
             const trimmedProxy = proxy.trim();

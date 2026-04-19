@@ -113,7 +113,10 @@ function parseInterval(interval: string | number): number {
 export function parseClashYaml(content: string): ParsedConfig | null {
     try {
         const parsed = yaml.load(content) as any;
-        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.proxies)) {
+        if (!parsed) return null;
+
+        // Handle standard Clash config with 'proxies' key
+        if (typeof parsed === 'object' && !Array.isArray(parsed) && Array.isArray(parsed.proxies)) {
             const proxies = parsed.proxies
                 .map((p: any) => convertYamlProxyToObject(p))
                 .filter((p: any) => p != null) as ProxyConfig[];
@@ -124,6 +127,20 @@ export function parseClashYaml(content: string): ParsedConfig | null {
                     type: 'yamlConfig',
                     proxies,
                     config: Object.keys(configOverrides).length > 0 ? configOverrides : null
+                };
+            }
+        }
+
+        // Handle raw array of proxies (e.g. Sub-Store / raw YAML list)
+        if (Array.isArray(parsed)) {
+            const proxies = parsed
+                .map((p: any) => convertYamlProxyToObject(p))
+                .filter((p: any) => p != null) as ProxyConfig[];
+            if (proxies.length > 0) {
+                return {
+                    type: 'yamlConfig',
+                    proxies,
+                    config: null
                 };
             }
         }

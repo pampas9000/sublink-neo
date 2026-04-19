@@ -59,10 +59,11 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         externalController?: string,
         externalUiDownloadUrl?: string,
         includeAutoSelect = true,
-        rejectQuic = false
+        rejectQuic = false,
+        fetchUA?: string
     ) {
         const resolvedBaseConfig = baseConfig ?? CLASH_CONFIG;
-        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic);
+        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic, fetchUA);
         this.selectedRules = selectedRules;
         this.customRules = customRules;
         this.enableClashUI = enableClashUI;

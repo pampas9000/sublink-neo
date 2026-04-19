@@ -50,14 +50,19 @@ function detectFormat(content: string): ContentFormat {
 }
 
 /**
+ * Default User-Agent to use when fetching subscriptions from providers.
+ * Using a browser-like UA ensures we get consistent results from providers like Sub-Store
+ * that might return different/broken formats for specific proxy clients.
+ */
+export const DEFAULT_FETCH_USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+/**
  * Fetch subscription content from a URL and parse it.
  */
 export async function fetchSubscription(url: string, userAgent?: string): Promise<any | string[] | null> {
     try {
         const headers = new Headers();
-        if (userAgent) {
-            headers.set('User-Agent', userAgent);
-        }
+        headers.set('User-Agent', userAgent || DEFAULT_FETCH_USER_AGENT);
         const response = await fetch(url, {
             method: 'GET',
             headers: headers
@@ -88,9 +93,7 @@ export interface SubscriptionFetchResult {
 export async function fetchSubscriptionWithFormat(url: string, userAgent?: string): Promise<SubscriptionFetchResult | null> {
     try {
         const headers = new Headers();
-        if (userAgent) {
-            headers.set('User-Agent', userAgent);
-        }
+        headers.set('User-Agent', userAgent || DEFAULT_FETCH_USER_AGENT);
         const response = await fetch(url, {
             method: 'GET',
             headers: headers
