@@ -44,6 +44,11 @@ export interface AlpineFormData {
     hiddenRules: string[];
     ruleSets: any[];
     ruleSetsLoading: boolean;
+    token: string;
+    tokenPromptOpen: boolean;
+    isSyncing: boolean;
+    syncStatus: 'idle' | 'syncing' | 'success' | 'error';
+    syncTimeout: any;
 
     init(): void;
     toggleAccordion(section: string): void;
@@ -65,6 +70,10 @@ export interface AlpineFormData {
     toggleRuleVisibility(name: string): void;
     fetchRuleSets(): Promise<void>;
     saveRuleSet(name: string): Promise<void>;
+    generateToken(): string;
+    loadConfigByToken(token: string): Promise<boolean>;
+    syncConfigWithD1(): Promise<void>;
+    setToken(token: string): void;
     
     // Alpine.js magic properties
     $watch?: (name: string, callback: (val: any) => void, options?: any) => void;
@@ -196,6 +205,11 @@ export const formLogicFn = (t: (key: string) => string) => {
             hiddenRules: [],
             ruleSets: [],
             ruleSetsLoading: false,
+            token: '',
+            tokenPromptOpen: false,
+            isSyncing: false,
+            syncStatus: 'idle',
+            syncTimeout: null,
 
             init() {
                 if (window.APP_TRANSLATIONS) {
@@ -231,6 +245,18 @@ export const formLogicFn = (t: (key: string) => string) => {
                 }
 
                 this.fetchRuleSets();
+                
+                // Token initialization
+                this.token = localStorage.getItem('syncToken') || '';
+                if (this.token) {
+                    this.loadConfigByToken(this.token);
+                } else {
+                    // Only show prompt if it's a first-time visit or cleared
+                    setTimeout(() => {
+                        if (!this.token) this.tokenPromptOpen = true;
+                    }, 500);
+                }
+
                 const initialUrlParams = new URLSearchParams(window.location.search);
                 this.currentConfigId = initialUrlParams.get('configId') || '';
 
@@ -267,6 +293,20 @@ export const formLogicFn = (t: (key: string) => string) => {
                 this.$watch?.('customShortCode', val => localStorage.setItem('customShortCode', val));
                 this.$watch?.('accordionSections', (val: any) => localStorage.setItem('accordionSections', JSON.stringify(val)), { deep: true });
                 this.$watch?.('hiddenRules', (val: any) => localStorage.setItem('hiddenRules', JSON.stringify(val)), { deep: true });
+
+                // Watch everything for sync
+                this.$watch?.('input', () => this.syncConfigWithD1());
+                this.$watch?.('selectedRules', () => this.syncConfigWithD1(), { deep: true });
+                this.$watch?.('groupByCountry', () => this.syncConfigWithD1());
+                this.$watch?.('includeAutoSelect', () => this.syncConfigWithD1());
+                this.$watch?.('enableClashUI', () => this.syncConfigWithD1());
+                this.$watch?.('externalController', () => this.syncConfigWithD1());
+                this.$watch?.('externalUiDownloadUrl', () => this.syncConfigWithD1());
+                this.$watch?.('rejectQuic', () => this.syncConfigWithD1());
+                this.$watch?.('customUA', () => this.syncConfigWithD1());
+                this.$watch?.('hiddenRules', () => this.syncConfigWithD1(), { deep: true });
+                this.$watch?.('configType', () => this.syncConfigWithD1());
+                this.$watch?.('configEditor', () => this.syncConfigWithD1());
             },
 
             toggleAccordion(section: string) {
@@ -755,6 +795,91 @@ export const formLogicFn = (t: (key: string) => string) => {
                 } catch (e: any) {
                     alert('Failed to save rule set: ' + e.message);
                 }
+            },
+
+            generateToken() {
+                const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+                let result = '';
+                for (let i = 0; i < 8; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            },
+
+            async loadConfigByToken(token: string) {
+                if (!token) return false;
+                try {
+                    const response = await fetch(`/api/user-config/${token}`);
+                    const data = await response.json();
+                    if (data) {
+                        // Apply state from D1
+                        if (data.input !== undefined) this.input = data.input;
+                        if (data.selectedRules !== undefined) this.selectedRules = data.selectedRules;
+                        if (data.groupByCountry !== undefined) this.groupByCountry = data.groupByCountry;
+                        if (data.includeAutoSelect !== undefined) this.includeAutoSelect = data.includeAutoSelect;
+                        if (data.enableClashUI !== undefined) this.enableClashUI = data.enableClashUI;
+                        if (data.externalController !== undefined) this.externalController = data.externalController;
+                        if (data.externalUiDownloadUrl !== undefined) this.externalUiDownloadUrl = data.externalUiDownloadUrl;
+                        if (data.rejectQuic !== undefined) this.rejectQuic = data.rejectQuic;
+                        if (data.customUA !== undefined) this.customUA = data.customUA;
+                        if (data.hiddenRules !== undefined) this.hiddenRules = data.hiddenRules;
+                        if (data.configType !== undefined) this.configType = data.configType;
+                        if (data.configEditor !== undefined) this.configEditor = data.configEditor;
+                        return true;
+                    }
+                    return false;
+                } catch (e) {
+                    console.error('Failed to load config by token:', e);
+                    return false;
+                }
+            },
+
+            async syncConfigWithD1() {
+                if (!this.token) return;
+                
+                if (this.syncTimeout) clearTimeout(this.syncTimeout);
+                
+                this.syncTimeout = setTimeout(async () => {
+                    this.syncStatus = 'syncing';
+                    try {
+                        const data = {
+                            input: this.input,
+                            selectedRules: this.selectedRules,
+                            groupByCountry: this.groupByCountry,
+                            includeAutoSelect: this.includeAutoSelect,
+                            enableClashUI: this.enableClashUI,
+                            externalController: this.externalController,
+                            externalUiDownloadUrl: this.externalUiDownloadUrl,
+                            rejectQuic: this.rejectQuic,
+                            customUA: this.customUA,
+                            hiddenRules: this.hiddenRules,
+                            configType: this.configType,
+                            configEditor: this.configEditor
+                        };
+
+                        const response = await fetch('/api/user-config', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ token: this.token, data })
+                        });
+
+                        if (response.ok) {
+                            this.syncStatus = 'success';
+                            setTimeout(() => { if (this.syncStatus === 'success') this.syncStatus = 'idle'; }, 3000);
+                        } else {
+                            this.syncStatus = 'error';
+                        }
+                    } catch (e) {
+                        console.error('Sync failed:', e);
+                        this.syncStatus = 'error';
+                    }
+                }, 2000); // 2 second debounce
+            },
+
+            setToken(token: string) {
+                this.token = token;
+                localStorage.setItem('syncToken', token);
+                this.syncConfigWithD1();
             }
         } as AlpineFormData;
     }

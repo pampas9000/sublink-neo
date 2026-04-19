@@ -2,6 +2,7 @@
 /** @jsxImportSource hono/jsx */
 import { PREDEFINED_RULE_SETS, UNIFIED_RULES } from '../config/index.ts';
 import { CustomRules } from './CustomRules.tsx';
+import { TokenManager } from './TokenManager.tsx';
 import { TextareaWithActions } from './TextareaWithActions.tsx';
 import { ValidatedTextarea } from './ValidatedTextarea.tsx';
 import { formLogicFn } from './formLogic.ts';
@@ -53,6 +54,7 @@ export const Form: FC<FormProps> = (props) => {
 
   return (
     <div x-data="formData()" x-init="init()" class="max-w-4xl mx-auto">
+      <TokenManager t={t} />
       <form {...{'x-on:submit.prevent': 'submitForm'}} class="space-y-8">
 
       {/* Input Section */}
@@ -170,15 +172,14 @@ export const Form: FC<FormProps> = (props) => {
     ))}
   </div>
 
-  <div x-show="hiddenRules.length > 0" class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+  <div x-show="hiddenRules.length > 0" x-data="{ showHidden: false }" class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
     <button 
       type="button" 
       {...{ 'x-on:click': 'showHidden = !showHidden' }}
       class="text-xs font-medium text-gray-400 hover:text-primary-500 flex items-center gap-1 transition-colors"
-      x-data="{ showHidden: false }"
     >
       <i class="fas" x-bind:class="showHidden ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-      <span x-text="showHidden ? t('hideRule') : t('showHiddenRules') + ' (' + hiddenRules.length + ')'"></span>
+      <span x-text="showHidden ? window.APP_TRANSLATIONS.hiddenRules : window.APP_TRANSLATIONS.showHiddenRules + ' (' + hiddenRules.length + ')'"></span>
     </button>
     
     <div x-show="showHidden" class="mt-3 flex flex-wrap gap-2">

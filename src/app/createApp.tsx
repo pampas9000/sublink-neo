@@ -15,6 +15,7 @@ import { APP_NAME, APP_SUBTITLE } from '../constants.ts';
 import { ShortLinkService } from '../services/shortLinkService.ts';
 import { ConfigStorageService } from '../services/configStorageService.ts';
 import { RuleSetService } from '../services/ruleSetService.ts';
+import { UserConfigService } from '../services/userConfigService.ts';
 import { ServiceError, MissingDependencyError } from '../services/errors.ts';
 import { normalizeRuntime } from '../runtime/runtimeConfig.ts';
 import { PREDEFINED_RULE_SETS, SING_BOX_CONFIG, SING_BOX_CONFIG_V1_11, generateSubconverterConfig } from '../config/index.ts';
@@ -35,7 +36,8 @@ export function createApp(bindings: any = {}) {
     const services = {
         shortLinks: runtime.kv ? new ShortLinkService(runtime.kv, { shortLinkTtlSeconds: runtime.config.shortLinkTtlSeconds }) : null,
         configStorage: runtime.kv ? new ConfigStorageService(runtime.kv, { configTtlSeconds: runtime.config.configTtlSeconds }) : null,
-        ruleSets: runtime.d1 ? new RuleSetService(runtime.d1) : null
+        ruleSets: runtime.d1 ? new RuleSetService(runtime.d1) : null,
+        userConfigs: runtime.d1 ? new UserConfigService(runtime.d1) : null
     };
 
     const app = new Hono<AppContext>();
@@ -435,6 +437,34 @@ export function createApp(bindings: any = {}) {
             const ruleSets = requireRuleSetService(services.ruleSets);
             const id = await ruleSets.saveRuleSet(ruleSet);
             return c.json({ id });
+        } catch (error: any) {
+            return handleError(c, error, runtime.logger);
+        }
+    });
+
+    // User Config Sync API
+    app.get('/api/user-config/:token', async (c) => {
+        try {
+            const token = c.req.param('token');
+            if (!services.userConfigs) return c.json(null);
+            const data = await services.userConfigs.getConfig(token);
+            return c.json(data);
+        } catch (error: any) {
+            return handleError(c, error, runtime.logger);
+        }
+    });
+
+    app.post('/api/user-config', async (c) => {
+        try {
+            const { token, data } = await c.req.json();
+            if (!token || !data) {
+                return c.text('Missing token or data', 400);
+            }
+            if (!services.userConfigs) {
+                throw new MissingDependencyError('User config storage is unavailable');
+            }
+            await services.userConfigs.saveConfig(token, data);
+            return c.json({ success: true });
         } catch (error: any) {
             return handleError(c, error, runtime.logger);
         }
