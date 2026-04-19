@@ -18,6 +18,49 @@ export const CustomRules: FC<CustomRulesProps> = (props) => {
                     <i class="fas fa-stream text-gray-400"></i>
                     {t('customRulesSection')}
                 </h3>
+                
+                <div class="flex items-center gap-2" x-data="{ showSets: false }">
+                    <button 
+                        type="button" 
+                        x-on:click="showSets = !showSets"
+                        class="px-3 py-1.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400 transition-all flex items-center gap-2"
+                    >
+                        <i class="fas fa-cloud"></i>
+                        {t('myRuleSets')}
+                        <span class="w-5 h-5 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 flex items-center justify-center" x-text="ruleSets.length"></span>
+                    </button>
+
+                    <div 
+                        x-show="showSets" 
+                        {...{ 'x-on:click.away': 'showSets = false' }}
+                        class="absolute right-0 mt-8 w-64 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 p-4"
+                        {...{'x-transition:enter': 'transition ease-out duration-200', 'x-transition:enter-start': 'opacity-0 transform scale-95', 'x-transition:enter-end': 'opacity-100 transform scale-100'}}
+                    >
+                        <h4 class="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                            <i class="fas fa-database text-primary-500"></i>
+                            {t('loadRuleSet')}
+                        </h4>
+                        
+                        <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                            <template x-if="ruleSetsLoading">
+                                <div class="text-center py-4"><i class="fas fa-spinner fa-spin text-gray-400"></i></div>
+                            </template>
+                            <template x-if="!ruleSetsLoading && ruleSets.length === 0">
+                                <div class="text-center py-4 text-xs text-gray-500">{t('noCustomRulesForm')}</div>
+                            </template>
+                            <template x-for="set in ruleSets" x-bind:key="set.id">
+                                <button 
+                                    type="button" 
+                                    x-on:click="rules = set.rules; jsonContent = JSON.stringify(set.rules, null, 2); showSets = false; alert('Rule set loaded!')"
+                                    class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+                                >
+                                    <div class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-primary-600 dark:group-hover:text-primary-400" x-text="set.name"></div>
+                                    <div class="text-[10px] text-gray-400" x-text="new Date(set.updated_at).toLocaleString()"></div>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-6 gap-4">
@@ -187,6 +230,18 @@ export const CustomRules: FC<CustomRulesProps> = (props) => {
                     placeholder={t('customRuleGeoIPPlaceholder')}
                 />
             </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                    {t('ruleProviderUrl')}
+                    <i class="fas fa-info-circle text-gray-400 hover:text-primary-500 cursor-help" title={t('ruleProviderUrlTip')}></i>
+                </label>
+                <input
+                    type="text"
+                    x-model="rule.rule_provider_url"
+                    class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                    placeholder="https://example.com/rules.yaml"
+                />
+            </div>
         </div>
     </div>
           </template>
@@ -196,6 +251,15 @@ export const CustomRules: FC<CustomRulesProps> = (props) => {
           <button type="button" x-on:click="addRule()" class="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors duration-200 font-medium flex items-center gap-2">
             <i class="fas fa-plus"></i>
             {t('addCustomRule')}
+          </button>
+          <button 
+            type="button" 
+            x-show="rules.length > 0"
+            x-on:click="const name = prompt(window.APP_TRANSLATIONS.ruleSetName || 'Rule Set Name'); if(name) saveRuleSet(name)"
+            class="px-4 py-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors duration-200 font-medium flex items-center gap-2"
+          >
+            <i class="fas fa-save"></i>
+            {t('saveRuleSet')}
           </button>
           <button type="button" x-on:click="clearAll()" x-show="rules.length > 0" class="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors duration-200 font-medium flex items-center gap-2" >
     <i class="fas fa-trash"></i>
@@ -293,6 +357,7 @@ export const CustomRules: FC<CustomRulesProps> = (props) => {
                 protocol: '',
                 site: '',
                 ip: '',
+                rule_provider_url: '',
                 outbound: '' 
               });
             },

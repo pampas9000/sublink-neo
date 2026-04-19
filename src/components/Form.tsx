@@ -144,22 +144,55 @@ export const Form: FC<FormProps> = (props) => {
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {UNIFIED_RULES.map((rule) => (
-      <label class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors group">
+      <label 
+        x-show={`!hiddenRules.includes('${rule.name}')`}
+        class="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors group relative"
+      >
         <input
           type="checkbox"
           value={rule.name}
           x-model="selectedRules" 
-                    x-on:change="selectedPredefinedRule = 'custom'"
-        class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
-                  />
+          x-on:change="selectedPredefinedRule = 'custom'"
+          class="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+        />
         <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
           {t(`outboundNames.${rule.name}`)}
         </span>
+        <button
+          type="button"
+          {...{ 'x-on:click.stop.prevent': `toggleRuleVisibility('${rule.name}')` }}
+          class="absolute right-2 opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+          title={t('hideRule')}
+        >
+          <i class="fas fa-eye-slash text-xs"></i>
+        </button>
       </label>
     ))}
   </div>
 
-          </div>
+  <div x-show="hiddenRules.length > 0" class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+    <button 
+      type="button" 
+      {...{ 'x-on:click': 'showHidden = !showHidden' }}
+      class="text-xs font-medium text-gray-400 hover:text-primary-500 flex items-center gap-1 transition-colors"
+      x-data="{ showHidden: false }"
+    >
+      <i class="fas" x-bind:class="showHidden ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      <span x-text="showHidden ? t('hideRule') : t('showHiddenRules') + ' (' + hiddenRules.length + ')'"></span>
+    </button>
+    
+    <div x-show="showHidden" class="mt-3 flex flex-wrap gap-2">
+      <template x-for="ruleName in hiddenRules" x-bind:key="ruleName">
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-400">
+          <span x-text="window.APP_TRANSLATIONS.outboundNames[ruleName] || ruleName"></span>
+          <button type="button" x-on:click="toggleRuleVisibility(ruleName)" class="hover:text-primary-600">
+            <i class="fas fa-undo text-[10px]"></i>
+          </button>
+        </span>
+      </template>
+    </div>
+  </div>
+</div>
 
   <CustomRules t={t} />
 

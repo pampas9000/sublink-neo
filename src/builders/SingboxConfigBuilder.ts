@@ -482,6 +482,13 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
             }, rule));
         });
 
+        rules.filter(rule => !!rule.rule_provider_url).map(rule => {
+            this.config.route.rules.push(attachProtocolIfNeeded({
+                rule_set: [rule.outbound],
+                outbound: this.t(`outboundNames.${rule.outbound}`)
+            }, rule));
+        });
+
         this.config.route.rules.unshift(
             { clash_mode: 'direct', outbound: 'DIRECT' },
             { clash_mode: 'global', outbound: this.t('outboundNames.Node Select') },

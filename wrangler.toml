@@ -8,5 +8,10 @@ kv_namespaces = [
   { binding = "SUBLINK_KV", id = "8943789ed0af49659f887fc740d11240" }
 ]
 
+[[d1_databases]]
+binding = "SUBLINK_D1"
+database_name = "sublink-worker-db"
+database_id = "your-d1-database-id" # User needs to replace this or we use a place holder
+
 [assets]
 directory = "./public"

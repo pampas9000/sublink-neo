@@ -13,6 +13,7 @@ const DEFAULTS = {
 export function normalizeRuntime(runtime: RuntimeBindings = {}): NormalizedRuntime {
     return {
         kv: runtime.kv ?? null,
+        d1: runtime.d1 ?? null,
         assetFetcher: runtime.assetFetcher ?? null,
         logger: runtime.logger ?? console,
         config: {

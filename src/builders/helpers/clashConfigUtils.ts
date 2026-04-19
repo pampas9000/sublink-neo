@@ -58,6 +58,12 @@ export function emitClashRules(rules: any[] = [], translator: Translator): strin
             });
         });
 
+    rules
+        .filter(rule => !!rule.rule_provider_url)
+        .forEach(rule => {
+            results.push(`RULE-SET,${rule.outbound},${translator('outboundNames.' + rule.outbound)}`);
+        });
+
     return results;
 }
 

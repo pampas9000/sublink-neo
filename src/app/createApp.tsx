@@ -14,6 +14,7 @@ import { encodeBase64, tryDecodeSubscriptionLines } from '../utils.ts';
 import { APP_NAME, APP_SUBTITLE } from '../constants.ts';
 import { ShortLinkService } from '../services/shortLinkService.ts';
 import { ConfigStorageService } from '../services/configStorageService.ts';
+import { RuleSetService } from '../services/ruleSetService.ts';
 import { ServiceError, MissingDependencyError } from '../services/errors.ts';
 import { normalizeRuntime } from '../runtime/runtimeConfig.ts';
 import { PREDEFINED_RULE_SETS, SING_BOX_CONFIG, SING_BOX_CONFIG_V1_11, generateSubconverterConfig } from '../config/index.ts';
@@ -33,7 +34,8 @@ export function createApp(bindings: any = {}) {
     const runtime = normalizeRuntime(bindings);
     const services = {
         shortLinks: runtime.kv ? new ShortLinkService(runtime.kv, { shortLinkTtlSeconds: runtime.config.shortLinkTtlSeconds }) : null,
-        configStorage: runtime.kv ? new ConfigStorageService(runtime.kv, { configTtlSeconds: runtime.config.configTtlSeconds }) : null
+        configStorage: runtime.kv ? new ConfigStorageService(runtime.kv, { configTtlSeconds: runtime.config.configTtlSeconds }) : null,
+        ruleSets: runtime.d1 ? new RuleSetService(runtime.d1) : null
     };
 
     const app = new Hono<AppContext>();
@@ -401,6 +403,43 @@ export function createApp(bindings: any = {}) {
         }
     });
 
+    // Rule Set API
+    app.get('/api/rules', async (c) => {
+        try {
+            const ruleSets = requireRuleSetService(services.ruleSets);
+            const results = await ruleSets.listRuleSets();
+            return c.json(results);
+        } catch (error: any) {
+            return handleError(c, error, runtime.logger);
+        }
+    });
+
+    app.get('/api/rules/:id', async (c) => {
+        try {
+            const id = c.req.param('id');
+            const ruleSets = requireRuleSetService(services.ruleSets);
+            const ruleSet = await ruleSets.getRuleSet(id);
+            if (!ruleSet) return c.text('Rule set not found', 404);
+            return c.json(ruleSet);
+        } catch (error: any) {
+            return handleError(c, error, runtime.logger);
+        }
+    });
+
+    app.post('/api/rules', async (c) => {
+        try {
+            const ruleSet = await c.req.json();
+            if (!ruleSet.id || !ruleSet.name || !Array.isArray(ruleSet.rules)) {
+                return c.text('Invalid rule set format', 400);
+            }
+            const ruleSets = requireRuleSetService(services.ruleSets);
+            const id = await ruleSets.saveRuleSet(ruleSet);
+            return c.json({ id });
+        } catch (error: any) {
+            return handleError(c, error, runtime.logger);
+        }
+    });
+
     app.get('/favicon.ico', async (c) => {
         if (!runtime.assetFetcher) {
             return c.notFound();
@@ -542,6 +581,13 @@ function requireShortLinkService(service: ShortLinkService | null): ShortLinkSer
 function requireConfigStorage(service: ConfigStorageService | null): ConfigStorageService {
     if (!service) {
         throw new MissingDependencyError('Config storage functionality is unavailable');
+    }
+    return service;
+}
+
+function requireRuleSetService(service: RuleSetService | null): RuleSetService {
+    if (!service) {
+        throw new MissingDependencyError('Rule set storage is unavailable (D1 not configured)');
     }
     return service;
 }

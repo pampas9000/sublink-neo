@@ -38,6 +38,7 @@ export interface GeneratedRule {
 	ip_cidr?: string[];
 	src_ip_cidr?: string[];
 	protocol?: string[];
+	rule_provider_url?: string;
 	outbound: string;
 }
 
@@ -76,6 +77,7 @@ export function generateRules(selectedRules: string[] | string = [], customRules
 			ip_cidr: toStringArray(rule.ip_cidr),
 			src_ip_cidr: toStringArray(rule.src_ip_cidr),
 			protocol: toStringArray(rule.protocol),
+			rule_provider_url: rule.rule_provider_url,
 			outbound: rule.name
 		});
 	});
@@ -150,6 +152,15 @@ export function generateRuleSets(selectedRules: string[] | string = [], customRu
 					url: `${IP_RULE_SET_BASE_URL}${ip}.srs`,
 				});
 			});
+
+			if (rule.rule_provider_url) {
+				site_rule_sets.push({
+					tag: rule.name,
+					type: 'remote',
+					format: 'binary',
+					url: rule.rule_provider_url,
+				});
+			}
 		});
 	}
 
@@ -242,6 +253,18 @@ export function generateClashRuleSets(selectedRules: string[] | string = [], cus
 					interval: 86400
 				};
 			});
+
+			if (rule.rule_provider_url) {
+				const tag = rule.name;
+				site_rule_providers[tag] = {
+					type: 'http',
+					format: rule.rule_provider_url.endsWith('.mrs') ? 'mrs' : 'yaml',
+					behavior: 'domain',
+					url: rule.rule_provider_url,
+					path: `./ruleset/${tag}${rule.rule_provider_url.endsWith('.mrs') ? '.mrs' : '.yaml'}`,
+					interval: 86400
+				};
+			}
 		});
 	}
 

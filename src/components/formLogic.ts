@@ -41,6 +41,9 @@ export interface AlpineFormData {
     shortenLinksText: string;
     shorteningText: string;
     showFullLinksText: string;
+    hiddenRules: string[];
+    ruleSets: any[];
+    ruleSetsLoading: boolean;
 
     init(): void;
     toggleAccordion(section: string): void;
@@ -59,6 +62,9 @@ export interface AlpineFormData {
     isSubscriptionUrl(text: string): boolean;
     tryParseSubscriptionUrl(text: string): Promise<void>;
     populateFormFromUrl(url: URL): void;
+    toggleRuleVisibility(name: string): void;
+    fetchRuleSets(): Promise<void>;
+    saveRuleSet(name: string): Promise<void>;
     
     // Alpine.js magic properties
     $watch?: (name: string, callback: (val: any) => void, options?: any) => void;
@@ -187,6 +193,9 @@ export const formLogicFn = (t: (key: string) => string) => {
             shortenLinksText: '',
             shorteningText: '',
             showFullLinksText: '',
+            hiddenRules: [],
+            ruleSets: [],
+            ruleSetsLoading: false,
 
             init() {
                 if (window.APP_TRANSLATIONS) {
@@ -213,6 +222,15 @@ export const formLogicFn = (t: (key: string) => string) => {
                 this.configEditor = localStorage.getItem('configEditor') || '';
                 this.configType = localStorage.getItem('configType') || 'singbox';
                 this.customShortCode = localStorage.getItem('customShortCode') || '';
+                
+                try {
+                    const savedHidden = localStorage.getItem('hiddenRules');
+                    this.hiddenRules = savedHidden ? JSON.parse(savedHidden) : [];
+                } catch (e) {
+                    this.hiddenRules = [];
+                }
+
+                this.fetchRuleSets();
                 const initialUrlParams = new URLSearchParams(window.location.search);
                 this.currentConfigId = initialUrlParams.get('configId') || '';
 
@@ -248,6 +266,7 @@ export const formLogicFn = (t: (key: string) => string) => {
                 });
                 this.$watch?.('customShortCode', val => localStorage.setItem('customShortCode', val));
                 this.$watch?.('accordionSections', (val: any) => localStorage.setItem('accordionSections', JSON.stringify(val)), { deep: true });
+                this.$watch?.('hiddenRules', (val: any) => localStorage.setItem('hiddenRules', JSON.stringify(val)), { deep: true });
             },
 
             toggleAccordion(section: string) {
@@ -689,6 +708,52 @@ export const formLogicFn = (t: (key: string) => string) => {
                 if (selectedRules || customRules || this.groupByCountry || this.enableClashUI ||
                     externalController || externalUiDownloadUrl || ua || configId) {
                     this.showAdvanced = true;
+                }
+            },
+
+            toggleRuleVisibility(name: string) {
+                if (this.hiddenRules.includes(name)) {
+                    this.hiddenRules = this.hiddenRules.filter(n => n !== name);
+                } else {
+                    this.hiddenRules.push(name);
+                }
+            },
+
+            async fetchRuleSets() {
+                this.ruleSetsLoading = true;
+                try {
+                    const response = await fetch('/api/rules');
+                    if (response.ok) {
+                        this.ruleSets = await response.json();
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch rule sets:', e);
+                } finally {
+                    this.ruleSetsLoading = false;
+                }
+            },
+
+            async saveRuleSet(name: string) {
+                try {
+                    const customRulesInput = document.querySelector('input[name="customRules"]') as HTMLInputElement;
+                    const rules = customRulesInput && customRulesInput.value ? JSON.parse(customRulesInput.value) : [];
+                    
+                    const id = crypto.randomUUID().slice(0, 8);
+                    const response = await fetch('/api/rules', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id, name, rules })
+                    });
+
+                    if (response.ok) {
+                        await this.fetchRuleSets();
+                        alert('Rule set saved successfully!');
+                    } else {
+                        const err = await response.text();
+                        throw new Error(err);
+                    }
+                } catch (e: any) {
+                    alert('Failed to save rule set: ' + e.message);
                 }
             }
         } as AlpineFormData;

@@ -10,6 +10,23 @@ export interface KeyValueStore {
 }
 
 /**
+ * D1 Database Interface (Partial for what we need)
+ */
+export interface D1Result<T = any> {
+    results: T[];
+    success: boolean;
+    error?: string;
+    meta?: any;
+}
+
+export interface D1Database {
+    prepare(query: string): any;
+    batch(statements: any[]): Promise<D1Result[]>;
+    exec(query: string): Promise<D1Result>;
+    dump(): Promise<ArrayBuffer>;
+}
+
+/**
  * Asset Fetcher Type
  */
 export type AssetFetcher = (request: any) => Promise<any>;
@@ -29,6 +46,7 @@ export type RuntimeConfig = v.InferOutput<typeof RuntimeConfigSchema>;
  */
 export const RuntimeBindingsSchema = v.object({
     kv: v.optional(v.union([v.null(), v.any()])),
+    d1: v.optional(v.union([v.null(), v.any()])),
     assetFetcher: v.optional(v.union([v.null(), v.any()])),
     logger: v.optional(v.any()),
     config: v.optional(RuntimeConfigSchema)
@@ -41,6 +59,7 @@ export type RuntimeBindings = v.InferOutput<typeof RuntimeBindingsSchema>;
  */
 export interface NormalizedRuntime {
     kv: KeyValueStore | null;
+    d1: D1Database | null;
     assetFetcher: AssetFetcher | null;
     logger: any;
     config: {
