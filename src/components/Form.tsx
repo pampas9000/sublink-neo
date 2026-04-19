@@ -41,7 +41,34 @@ export const Form: FC<FormProps> = (props) => {
     customShortCode: t('customShortCode'),
     optional: t('optional'),
     customShortCodePlaceholder: t('customShortCodePlaceholder'),
-    showFullLinks: t('showFullLinks')
+    showFullLinks: t('showFullLinks'),
+    hiddenRules: t('hiddenRules'),
+    showHiddenRules: t('showHiddenRules'),
+    outboundNames: {
+      direct: t('outboundNames.direct'),
+      proxy: t('outboundNames.proxy'),
+      block: t('outboundNames.block'),
+      dns: t('outboundNames.dns'),
+      'google-dns': t('outboundNames.google-dns'),
+      'proxy-dns': t('outboundNames.proxy-dns'),
+      adblock: t('outboundNames.adblock'),
+      microsoft: t('outboundNames.microsoft'),
+      google: t('outboundNames.google'),
+      apple: t('outboundNames.apple'),
+      telegram: t('outboundNames.telegram'),
+      twitter: t('outboundNames.twitter'),
+      youtube: t('outboundNames.youtube'),
+      netflix: t('outboundNames.netflix'),
+      disney: t('outboundNames.disney'),
+      openai: t('outboundNames.openai'),
+      tiktok: t('outboundNames.tiktok'),
+      bahamut: t('outboundNames.bahamut'),
+      spotify: t('outboundNames.spotify'),
+      steam: t('outboundNames.steam'),
+      geolocation: t('outboundNames.geolocation'),
+      china: t('outboundNames.china'),
+      other: t('outboundNames.other')
+    }
   };
 
   const scriptContent = `
@@ -172,10 +199,10 @@ export const Form: FC<FormProps> = (props) => {
     ))}
   </div>
 
-  <div x-show="hiddenRules.length > 0" x-data="{ showHidden: false }" class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+  <div x-show="hiddenRules.length > 0" class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
     <button 
       type="button" 
-      {...{ 'x-on:click': 'showHidden = !showHidden' }}
+      x-on:click="showHidden = !showHidden"
       class="text-xs font-medium text-gray-400 hover:text-primary-500 flex items-center gap-1 transition-colors"
     >
       <i class="fas" x-bind:class="showHidden ? 'fa-chevron-up' : 'fa-chevron-down'"></i>

@@ -49,6 +49,7 @@ export interface AlpineFormData {
     isSyncing: boolean;
     syncStatus: 'idle' | 'syncing' | 'success' | 'error';
     syncTimeout: any;
+    showHidden: boolean;
 
     init(): void;
     toggleAccordion(section: string): void;
@@ -210,6 +211,7 @@ export const formLogicFn = (t: (key: string) => string) => {
             isSyncing: false,
             syncStatus: 'idle',
             syncTimeout: null,
+            showHidden: false,
 
             init() {
                 if (window.APP_TRANSLATIONS) {
@@ -755,7 +757,7 @@ export const formLogicFn = (t: (key: string) => string) => {
                 if (this.hiddenRules.includes(name)) {
                     this.hiddenRules = this.hiddenRules.filter(n => n !== name);
                 } else {
-                    this.hiddenRules.push(name);
+                    this.hiddenRules = [...this.hiddenRules, name];
                 }
             },
 
