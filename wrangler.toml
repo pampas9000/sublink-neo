@@ -11,7 +11,7 @@ kv_namespaces = [
 [[d1_databases]]
 binding = "SUBLINK_D1"
 database_name = "sublink-worker-db"
-database_id = "your-d1-database-id" # User needs to replace this or we use a place holder
+database_id = "9e843e36-c1c0-48bd-abfa-056db629943b" # User needs to replace this or we use a place holder
 
 [assets]
 directory = "./public"
