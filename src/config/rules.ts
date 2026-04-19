@@ -98,6 +98,11 @@ export const UNIFIED_RULES: UnifiedRule[] = [
 		ip_rules: []
 	},
 	{
+		name: 'Cloudflare',
+		site_rules: ['cloudflare'],
+		ip_rules: ['cloudflare']
+	},
+	{
 		name: 'Non-China',
 		site_rules: ['geolocation-!cn'],
 		ip_rules: []

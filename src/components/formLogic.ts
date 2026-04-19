@@ -17,6 +17,7 @@ export interface AlpineFormData {
     enableClashUI: boolean;
     externalController: string;
     externalUiDownloadUrl: string;
+    rejectQuic: boolean;
     configType: string;
     configEditor: string;
     savingConfig: boolean;
@@ -162,6 +163,7 @@ export const formLogicFn = (t: (key: string) => string) => {
             enableClashUI: false,
             externalController: '',
             externalUiDownloadUrl: '',
+            rejectQuic: false,
             configType: 'singbox',
             configEditor: '',
             savingConfig: false,
@@ -206,6 +208,7 @@ export const formLogicFn = (t: (key: string) => string) => {
                 this.enableClashUI = localStorage.getItem('enableClashUI') === 'true';
                 this.externalController = localStorage.getItem('externalController') || '';
                 this.externalUiDownloadUrl = localStorage.getItem('externalUiDownloadUrl') || '';
+                this.rejectQuic = localStorage.getItem('rejectQuic') === 'true';
                 this.customUA = localStorage.getItem('userAgent') || '';
                 this.configEditor = localStorage.getItem('configEditor') || '';
                 this.configType = localStorage.getItem('configType') || 'singbox';
@@ -233,6 +236,7 @@ export const formLogicFn = (t: (key: string) => string) => {
                 this.$watch?.('enableClashUI', val => localStorage.setItem('enableClashUI', val));
                 this.$watch?.('externalController', val => localStorage.setItem('externalController', val));
                 this.$watch?.('externalUiDownloadUrl', val => localStorage.setItem('externalUiDownloadUrl', val));
+                this.$watch?.('rejectQuic', val => localStorage.setItem('rejectQuic', val));
                 this.$watch?.('customUA', val => localStorage.setItem('userAgent', val));
                 this.$watch?.('configEditor', val => {
                     localStorage.setItem('configEditor', val);
@@ -283,6 +287,10 @@ export const formLogicFn = (t: (key: string) => string) => {
 
                 if (this.groupByCountry) {
                     params.append('group_by_country', 'true');
+                }
+                
+                if (this.rejectQuic) {
+                    params.append('reject_quic', 'true');
                 }
 
                 const appLang = window.APP_LANG || 'zh-CN';
@@ -443,6 +451,7 @@ export const formLogicFn = (t: (key: string) => string) => {
                     if (this.enableClashUI) params.append('enable_clash_ui', 'true');
                     if (this.externalController) params.append('external_controller', this.externalController);
                     if (this.externalUiDownloadUrl) params.append('external_ui_download_url', this.externalUiDownloadUrl);
+                    if (this.rejectQuic) params.append('reject_quic', 'true');
 
                     const urlParams = new URLSearchParams(window.location.search);
                     const configId = this.currentConfigId || urlParams.get('configId');
@@ -653,6 +662,7 @@ export const formLogicFn = (t: (key: string) => string) => {
 
                 this.groupByCountry = params.get('group_by_country') === 'true';
                 this.includeAutoSelect = params.get('include_auto_select') !== 'false';
+                this.rejectQuic = params.get('reject_quic') === 'true';
                 this.enableClashUI = params.get('enable_clash_ui') === 'true';
 
                 const externalController = params.get('external_controller');

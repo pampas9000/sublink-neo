@@ -14,6 +14,7 @@ export abstract class BaseConfigBuilder {
     protected appliedOverrideKeys: Set<string>;
     protected groupByCountry: boolean;
     protected includeAutoSelect: boolean;
+    protected rejectQuic: boolean;
     protected providerUrls: string[];
     protected subscriptionUserinfo?: string;
     protected pendingUserProxyGroups?: any[];
@@ -24,7 +25,8 @@ export abstract class BaseConfigBuilder {
         lang: string | null | undefined,
         userAgent?: string,
         groupByCountry = false,
-        includeAutoSelect = true
+        includeAutoSelect = true,
+        rejectQuic = false
     ) {
         this.inputString = inputString;
         this.config = deepCopy(baseConfig);
@@ -35,6 +37,7 @@ export abstract class BaseConfigBuilder {
         this.appliedOverrideKeys = new Set();
         this.groupByCountry = groupByCountry;
         this.includeAutoSelect = includeAutoSelect;
+        this.rejectQuic = rejectQuic;
         this.providerUrls = [];
         this.subscriptionUserinfo = undefined;
     }

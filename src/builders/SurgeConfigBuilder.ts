@@ -18,10 +18,11 @@ export class SurgeConfigBuilder extends BaseConfigBuilder {
         lang: string | null | undefined,
         userAgent?: string,
         groupByCountry = false,
-        includeAutoSelect = true
+        includeAutoSelect = true,
+        rejectQuic = false
     ) {
         const resolvedBaseConfig = baseConfig ?? SURGE_CONFIG;
-        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect);
+        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic);
         this.selectedRules = selectedRules;
         this.customRules = customRules;
     }
@@ -413,6 +414,9 @@ export class SurgeConfigBuilder extends BaseConfigBuilder {
         }
 
         finalConfig.push('\n[Rule]');
+        if (this.rejectQuic) {
+            finalConfig.push('UDP,DEST-PORT,443,REJECT');
+        }
 
         rules.filter(rule => Array.isArray(rule.src_ip_cidr) && rule.src_ip_cidr.length > 0).map(rule => {
             (rule.src_ip_cidr as any[]).forEach(cidr => {

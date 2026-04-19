@@ -58,10 +58,11 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         enableClashUI = false,
         externalController?: string,
         externalUiDownloadUrl?: string,
-        includeAutoSelect = true
+        includeAutoSelect = true,
+        rejectQuic = false
     ) {
         const resolvedBaseConfig = baseConfig ?? CLASH_CONFIG;
-        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect);
+        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic);
         this.selectedRules = selectedRules;
         this.customRules = customRules;
         this.enableClashUI = enableClashUI;
@@ -598,6 +599,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         sanitizeClashProxyGroups(this.config);
 
         this.config.rules = [
+            ...(this.rejectQuic ? ['AND,((NETWORK,UDP),(DST-PORT,443)),REJECT'] : []),
             ...ruleResults,
             `MATCH,${this.t('outboundNames.Fall Back')}`
         ];

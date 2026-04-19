@@ -26,10 +26,11 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
         externalController?: string,
         externalUiDownloadUrl?: string,
         singboxVersion = '1.12',
-        includeAutoSelect = true
+        includeAutoSelect = true,
+        rejectQuic = false
     ) {
         const resolvedBaseConfig = baseConfig ?? SING_BOX_CONFIG;
-        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect);
+        super(inputString, resolvedBaseConfig, lang, userAgent, groupByCountry, includeAutoSelect, rejectQuic);
 
         this.selectedRules = selectedRules;
         this.customRules = customRules;
@@ -487,6 +488,14 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
             { action: 'sniff' },
             { protocol: 'dns', action: 'hijack-dns' }
         );
+        
+        if (this.rejectQuic) {
+            this.config.route.rules.unshift({
+                protocol: 'udp',
+                port: [443],
+                action: 'reject'
+            });
+        }
 
         this.config.route.auto_detect_interface = true;
         this.config.route.final = this.t('outboundNames.Fall Back');
