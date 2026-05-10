@@ -4,6 +4,7 @@ import { parseVless } from './protocols/vlessParser.ts';
 import { parseHysteria2 } from './protocols/hysteria2Parser.ts';
 import { parseTrojan } from './protocols/trojanParser.ts';
 import { parseTuic } from './protocols/tuicParser.ts';
+import { parseAnyTLS } from './protocols/anytlsParser.ts';
 import { fetchSubscription } from './subscription/httpSubscriptionFetcher.ts';
 import { ProxyConfig } from '../schemas/index.ts';
 
@@ -19,7 +20,8 @@ const protocolParsers: Record<string, ParserFn> = {
     http: fetchSubscription,
     https: fetchSubscription,
     trojan: parseTrojan,
-    tuic: parseTuic
+    tuic: parseTuic,
+    anytls: parseAnyTLS
 };
 
 export class ProxyParser {

@@ -9,3 +9,4 @@ export * from './protocols/vlessParser.ts';
 export * from './protocols/trojanParser.ts';
 export * from './protocols/hysteria2Parser.ts';
 export * from './protocols/tuicParser.ts';
+export * from './protocols/anytlsParser.ts';

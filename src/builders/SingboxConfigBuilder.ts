@@ -106,6 +106,27 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
 
         delete sanitized.packet_encoding;
 
+        if (sanitized.type === 'anytls') {
+            if (sanitized['idle-session-check-interval'] !== undefined) {
+                sanitized.idle_session_check_interval = `${sanitized['idle-session-check-interval']}s`;
+                delete sanitized['idle-session-check-interval'];
+            }
+            if (sanitized['idle-session-timeout'] !== undefined) {
+                sanitized.idle_session_timeout = `${sanitized['idle-session-timeout']}s`;
+                delete sanitized['idle-session-timeout'];
+            }
+            if (sanitized['min-idle-session'] !== undefined) {
+                sanitized.min_idle_session = sanitized['min-idle-session'];
+                delete sanitized['min-idle-session'];
+            }
+            if (sanitized.tls?.utls?.fingerprint) {
+                sanitized.tls.utls = {
+                    enabled: true,
+                    fingerprint: sanitized.tls.utls.fingerprint
+                };
+            }
+        }
+
         return sanitized;
     }
 

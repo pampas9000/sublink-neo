@@ -146,6 +146,18 @@ export const TuicSchema = v.intersect([
     })
 ]);
 
+export const AnyTLSSchema = v.intersect([
+    BaseProxySchema,
+    v.object({
+        type: v.literal('anytls'),
+        password: v.optional(v.string()),
+        tls: v.optional(TlsSchema),
+        'idle-session-check-interval': v.optional(v.number()),
+        'idle-session-timeout': v.optional(v.number()),
+        'min-idle-session': v.optional(v.number())
+    })
+]);
+
 /**
  * Master Proxy Schema
  */
@@ -155,7 +167,8 @@ export const ProxySchema = v.union([
     VlessSchema,
     TrojanSchema,
     Hysteria2Schema,
-    TuicSchema
+    TuicSchema,
+    AnyTLSSchema
 ]);
 
 export type ProxyConfig = v.InferOutput<typeof ProxySchema>;

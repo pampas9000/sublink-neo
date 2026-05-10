@@ -194,6 +194,39 @@ export function convertYamlProxyToObject(p: any): ProxyConfig | null {
             } as ProxyConfig;
         }
 
+        case 'anytls': {
+            const tlsEnabled = p.tls !== false; // Usually true by default for AnyTLS
+            const tls: TlsConfig | undefined = tlsEnabled
+                ? {
+                    enabled: true,
+                    server_name: p.servername || p.sni,
+                    insecure: !!p['skip-cert-verify'],
+                    alpn: toArray(p.alpn)
+                }
+                : undefined;
+
+            if (tls && p['client-fingerprint']) {
+                tls.utls = {
+                    enabled: true,
+                    fingerprint: p['client-fingerprint']
+                };
+            }
+
+            return {
+                type: 'anytls',
+                tag: name,
+                server: p.server,
+                server_port: parseInt(p.port),
+                password: p.password,
+                tls,
+                tcp_fast_open: !!p['fast-open'],
+                udp: p.udp,
+                'idle-session-check-interval': p['idle-session-check-interval'],
+                'idle-session-timeout': p['idle-session-timeout'],
+                'min-idle-session': p['min-idle-session']
+            } as ProxyConfig;
+        }
+
         case 'hysteria2':
         case 'hysteria':
         case 'hy2': {
