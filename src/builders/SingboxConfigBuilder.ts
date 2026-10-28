@@ -127,6 +127,34 @@ export class SingboxConfigBuilder extends BaseConfigBuilder {
             }
         }
 
+        if (sanitized.type === 'hysteria2') {
+            // Map Clash-style fields onto sing-box's hysteria2 outbound fields
+            const toMbps = (value: any): number | undefined => {
+                const num = parseInt(String(value), 10);
+                return Number.isNaN(num) ? undefined : num;
+            };
+            if (sanitized.up !== undefined) {
+                sanitized.up_mbps ??= toMbps(sanitized.up);
+                delete sanitized.up;
+            }
+            if (sanitized.down !== undefined) {
+                sanitized.down_mbps ??= toMbps(sanitized.down);
+                delete sanitized.down;
+            }
+            if (sanitized.ports) {
+                sanitized.server_ports ??= String(sanitized.ports)
+                    .split(',')
+                    .map((range: string) => range.trim().replace('-', ':'))
+                    .filter((range: string) => range.length > 0);
+                delete sanitized.ports;
+            }
+            if (typeof sanitized.hop_interval === 'number') {
+                sanitized.hop_interval = `${sanitized.hop_interval}s`;
+            }
+            // sing-box has no certificate fingerprint pin for hysteria2
+            delete sanitized.fingerprint;
+        }
+
         return sanitized;
     }
 

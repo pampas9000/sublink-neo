@@ -251,6 +251,9 @@ export function convertYamlProxyToObject(p: any): ProxyConfig | null {
                 obfs,
                 up: p.up,
                 down: p.down,
+                ports: p.ports !== undefined ? String(p.ports) : undefined,
+                hop_interval: p['hop-interval'],
+                fingerprint: p.fingerprint,
                 tcp_fast_open: !!p['fast-open'],
                 udp: p.udp
             } as ProxyConfig;

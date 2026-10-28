@@ -29,7 +29,9 @@ export function parseHysteria2(url: string): ProxyConfig | null {
         // Hysteria2 requires TLS by protocol design
         if (!params.security) params.security = 'tls';
         const tls = createTlsConfig(params);
-        
+        const alpn = parseArray(params.alpn);
+        if (tls.enabled && alpn) tls.alpn = alpn;
+
         let obfs: any = undefined;
         if (params['obfs-password']) {
             obfs = {
@@ -48,6 +50,8 @@ export function parseHysteria2(url: string): ProxyConfig | null {
             obfs,
             up: params.up ?? (params.upmbps ? parseMaybeNumber(params.upmbps) : undefined),
             down: params.down ?? (params.downmbps ? parseMaybeNumber(params.downmbps) : undefined),
+            ports: params.mport || params.ports || undefined,
+            fingerprint: params.pinSHA256 || undefined,
             tcp_fast_open: parseBool(params['fast-open'])
         } as ProxyConfig;
     } catch (e) {
