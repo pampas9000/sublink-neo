@@ -103,7 +103,7 @@ export function parseShadowsocks(url: string): ProxyConfig | null {
         const udpParam = params.get('udp');
         if (udpParam) {
             pluginInfo = pluginInfo || {};
-            pluginInfo.udp = udpParam === 'true';
+            pluginInfo.udp = udpParam === 'true' || udpParam === '1';
         }
     }
 
@@ -118,7 +118,10 @@ export function parseShadowsocks(url: string): ProxyConfig | null {
             return createConfig(tag, server, server_port, method!, password!, pluginInfo);
         }
 
-        let decodedCredentials = base64ToBinary(decodeURIComponent(credentials)).split(':');
+        // SIP002 allows userinfo as either Base64(method:password) or percent-encoded
+        // plain "method:password" (required for 2022-blake3-* ciphers). Base64 never contains ':'.
+        const userInfo = decodeURIComponent(credentials);
+        let decodedCredentials = (userInfo.includes(':') ? userInfo : base64ToBinary(userInfo)).split(':');
         let method = decodedCredentials[0];
         let password = decodedCredentials.slice(1).join(':');
         let [server, server_port] = parseServer(serverPart);

@@ -31,12 +31,18 @@ export function encodeBase64(input: string): string {
  * Base64 decode a string
  */
 export function decodeBase64(input: string): string {
-    const binaryString = base64ToBinary(input);
+    // Accept URL-safe alphabet and line-wrapped input, but reject anything that isn't Base64
+    // (e.g. plain YAML), otherwise callers would silently get garbage instead of an error.
+    const normalized = input.replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+    if (!normalized || !/^[A-Za-z0-9+/]+={0,2}$/.test(normalized)) {
+        throw new Error('Invalid Base64 input');
+    }
+    const binaryString = base64ToBinary(normalized);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
         bytes[i] = binaryString.charCodeAt(i);
     }
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8', { fatal: true });
     return decoder.decode(bytes);
 }
 
