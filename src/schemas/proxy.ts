@@ -130,7 +130,12 @@ export const Hysteria2Schema = v.intersect([
             password: v.string()
         })),
         up: v.optional(v.union([v.string(), v.number()])),
-        down: v.optional(v.union([v.string(), v.number()]))
+        down: v.optional(v.union([v.string(), v.number()])),
+        // Port hopping range in Clash format, e.g. "20000-30000,40000"
+        ports: v.optional(v.string()),
+        hop_interval: v.optional(v.union([v.string(), v.number()])),
+        // Server certificate SHA256 fingerprint (Clash `fingerprint`, URI `pinSHA256`)
+        fingerprint: v.optional(v.string())
     })
 ]);
 
