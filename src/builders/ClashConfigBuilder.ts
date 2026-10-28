@@ -221,8 +221,10 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
                     'recv-window-conn': (proxy as any).recv_window_conn,
                     sni: proxy.tls?.server_name || '',
                     'skip-cert-verify': !!proxy.tls?.insecure,
+                    ...(p.fingerprint ? { fingerprint: p.fingerprint } : {}),
+                    udp: getClashUdpValue(proxy),
                     ...((proxy as any).hop_interval !== undefined ? { 'hop-interval': (proxy as any).hop_interval } : {}),
-                    ...((proxy as any).alpn ? { alpn: (proxy as any).alpn } : {}),
+                    ...((p.alpn || proxy.tls?.alpn) ? { alpn: p.alpn || proxy.tls?.alpn } : {}),
                     ...((proxy as any).fast_open !== undefined ? { 'fast-open': (proxy as any).fast_open } : {}),
                 };
             case 'trojan':
